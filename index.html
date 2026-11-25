@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Life Game</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#12151c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Life Game">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <header>
+    <h1>Life Game</h1>
+    <div id="stats"></div>
+  </header>
+
+  <main>
+    <form id="goal-form">
+      <input id="goal-title" type="text" placeholder="New goal, e.g. Reach C1 English" required>
+      <button type="submit">Add goal</button>
+    </form>
+
+    <div id="goals"></div>
+
+    <details>
+      <summary>Backup</summary>
+      <p>Your data is saved only in this browser. Export a file to keep a copy or move it to another device.</p>
+      <button id="export">Export</button>
+      <label class="file">Import <input id="import" type="file" accept="application/json"></label>
+    </details>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "Life Game",
+  "short_name": "Life Game",
+  "description": "Turn goals into missions and earn points for real progress.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12151c",
+  "theme_color": "#12151c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
