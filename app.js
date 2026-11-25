@@ -5,6 +5,22 @@ const POINTS = { 1: 10, 2: 25, 3: 50 };
 const LABELS = { 1: "Small", 2: "Medium", 3: "Hard" };
 const POINTS_PER_LEVEL = 100;
 
+// Rank names for each level (the last one repeats after that).
+const RANKS = ["Base Camp", "Trail Walker", "Hill Climber", "Ridge Runner", "Peak Seeker", "Summit Master"];
+
+// Icons you can pick for a goal; each has its own color.
+const ICONS = {
+  "🗣️": { name: "Language", color: "#3f7ea6" },
+  "🌬️": { name: "Career", color: "#5b7f4a" },
+  "📚": { name: "Learning", color: "#8a5fa8" },
+  "💼": { name: "Work", color: "#6f685d" },
+  "🏃": { name: "Fitness", color: "#c8693c" },
+  "🥾": { name: "Adventure", color: "#3b8b85" },
+  "💰": { name: "Money", color: "#d9a441" },
+  "🎯": { name: "Other", color: "#b0503f" },
+};
+const DEFAULT_ICON = "🎯";
+
 // ---------- data ----------
 
 function uid() {
@@ -16,6 +32,7 @@ function starterData() {
     goals: [
       {
         id: uid(),
+        icon: "🗣️",
         title: "Improve my English (B2 to C1)",
         tasks: [
           { id: uid(), title: "Write a short English text about my last hike", difficulty: 1 },
@@ -25,6 +42,7 @@ function starterData() {
       },
       {
         id: uid(),
+        icon: "🌬️",
         title: "Become a wind turbine technician",
         tasks: [
           { id: uid(), title: "Find 3 training programs in my region", difficulty: 1 },
@@ -75,12 +93,17 @@ function totalPoints() {
   return sum;
 }
 
+function iconOf(goal) {
+  return goal.icon in ICONS ? goal.icon : DEFAULT_ICON;
+}
+
 // ---------- rendering ----------
 
 function el(tag, props = {}, children = []) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
     if (k === "class") node.className = v;
+    else if (k === "dataset") Object.assign(node.dataset, v);
     else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
     else node[k] = v;
   }
@@ -93,54 +116,67 @@ function el(tag, props = {}, children = []) {
 function renderStats() {
   const pts = totalPoints();
   const level = Math.floor(pts / POINTS_PER_LEVEL) + 1;
-  const toNext = POINTS_PER_LEVEL - (pts % POINTS_PER_LEVEL);
-  const stats = document.getElementById("stats");
-  stats.replaceChildren(
-    el("strong", {}, `Level ${level}`),
-    ` · ${pts} pts · ${toNext} to next level`
+  const into = pts % POINTS_PER_LEVEL;
+  const rank = RANKS[Math.min(level - 1, RANKS.length - 1)];
+
+  document.getElementById("stats").replaceChildren(
+    el("div", { class: "level-badge" }, [el("div", {}, [el("small", {}, "LEVEL"), el("b", {}, String(level))])]),
+    el("div", { class: "stats-body" }, [
+      el("div", { class: "rank" }, rank),
+      el("div", { class: "xp-bar" }, [el("div", { style: `width:${into}%` })]),
+      el("div", { class: "xp-text" }, `${into} / ${POINTS_PER_LEVEL} pts to level ${level + 1} · ${pts} pts total`),
+    ])
   );
 }
 
 function renderTask(goal, task) {
   const checkbox = el("input", {
     type: "checkbox",
+    class: "check",
     checked: !!task.done,
+    ariaLabel: "Done",
     onchange: () => toggleTask(goal.id, task.id),
   });
 
-  const body = el("div", { class: "task-body" }, [
-    el("div", { class: "task-title" }, task.title),
-  ]);
+  const body = el("div", { class: "task-body" }, [el("div", { class: "task-title" }, task.title)]);
   if (task.done && task.reflection) {
-    body.append(el("div", { class: "reflection" }, task.reflection));
+    body.append(el("div", { class: "reflection" }, `“${task.reflection}”`));
   }
 
-  const pts = el("span", { class: "pts" }, `${LABELS[task.difficulty]} · ${POINTS[task.difficulty]}`);
+  const chip = el("span", { class: `chip d${task.difficulty}` }, `${LABELS[task.difficulty]} · ${POINTS[task.difficulty]}`);
   const remove = el("button", {
     class: "ghost",
     title: "Delete task",
     onclick: () => deleteTask(goal.id, task.id),
   }, "✕");
 
-  return el("li", { class: "task" + (task.done ? " done" : "") }, [checkbox, body, pts, remove]);
+  return el("li", { class: "task" + (task.done ? " done" : ""), dataset: { task: task.id } }, [checkbox, body, chip, remove]);
 }
 
 function renderGoal(goal) {
+  const icon = iconOf(goal);
   const done = goal.tasks.filter(t => t.done).length;
   const total = goal.tasks.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
   const head = el("div", { class: "goal-head" }, [
-    el("h2", {}, goal.title),
-    el("button", { class: "ghost", onclick: () => deleteGoal(goal.id) }, "Delete"),
+    el("div", { class: "goal-icon" }, icon),
+    el("div", { class: "goal-title" }, [
+      el("h2", {}, goal.title),
+      el("div", { class: "progress-text" }, `${done} of ${total} tasks · ${pct}%`),
+    ]),
+    el("button", { class: "ghost", title: "Delete goal", onclick: () => deleteGoal(goal.id) }, "Delete"),
   ]);
 
-  const bar = el("div", { class: "bar" }, [el("div", { style: `width:${pct}%` })]);
+  const trail = el("div", { class: "trail" }, [
+    el("div", { class: "trail-line" }, [el("div", { style: `width:${pct}%` })]),
+    el("span", { class: "trail-flag" }, "🚩"),
+  ]);
 
   const list = el("ul", { class: "tasks" }, goal.tasks.map(t => renderTask(goal, t)));
 
   const titleInput = el("input", { type: "text", placeholder: "New task", required: true });
-  const diffSelect = el("select", {}, [1, 2, 3].map(d =>
+  const diffSelect = el("select", { ariaLabel: "Difficulty" }, [1, 2, 3].map(d =>
     el("option", { value: String(d), selected: d === 2 }, `${LABELS[d]} (${POINTS[d]})`)
   ));
   const form = el("form", {
@@ -151,18 +187,41 @@ function renderGoal(goal) {
     },
   }, [titleInput, diffSelect, el("button", { type: "submit" }, "Add")]);
 
-  return el("section", { class: "goal" }, [
-    head,
-    el("div", { class: "progress-text" }, `${done} of ${total} tasks done · ${pct}%`),
-    bar,
-    list,
-    form,
-  ]);
+  const card = el("section", {
+    class: "goal",
+    style: `--c:${ICONS[icon].color}`,
+    dataset: { goal: goal.id },
+  }, [head, trail]);
+  if (total > 0 && done === total) card.append(el("div", { class: "summit" }, "🏔️ Summit reached! Add a new task or a new goal."));
+  card.append(list, form);
+  return card;
 }
 
 function render() {
   renderStats();
   document.getElementById("goals").replaceChildren(...state.goals.map(renderGoal));
+}
+
+// ---------- celebration ----------
+
+function celebrate(taskId, points) {
+  const row = document.querySelector(`[data-task="${taskId}"]`);
+  if (!row) return;
+  const box = row.querySelector(".check").getBoundingClientRect();
+  const burst = el("div", { class: "burst", style: `left:${box.left + box.width / 2}px;top:${box.top + box.height / 2}px` });
+  burst.append(el("span", { class: "plus" }, `+${points}`));
+  const bits = ["🍃", "✨", "🌿", "⭐", "🍂"];
+  for (let i = 0; i < 12; i++) {
+    const angle = (Math.PI * 2 * i) / 12;
+    const dist = 50 + Math.random() * 40;
+    burst.append(el("span", {
+      class: "bit",
+      style: `--dx:${Math.cos(angle) * dist}px;--dy:${Math.sin(angle) * dist}px;--r:${Math.random() * 360}deg`,
+    }, bits[i % bits.length]));
+  }
+  document.body.append(burst);
+  row.closest(".goal").classList.add("pop");
+  setTimeout(() => burst.remove(), 1200);
 }
 
 // ---------- actions ----------
@@ -171,8 +230,8 @@ function findGoal(id) {
   return state.goals.find(g => g.id === id);
 }
 
-function addGoal(title) {
-  state.goals.push({ id: uid(), title, tasks: [] });
+function addGoal(title, icon) {
+  state.goals.push({ id: uid(), icon, title, tasks: [] });
   save();
   render();
 }
@@ -205,15 +264,18 @@ function toggleTask(goalId, taskId) {
     task.done = false;
     delete task.doneAt;
     delete task.reflection;
-  } else {
-    task.done = true;
-    task.doneAt = new Date().toISOString();
-    // One line about what you learned turns a checkbox into thinking.
-    const note = prompt("Done! One sentence: what did you learn or notice? (optional, English practice)");
-    if (note && note.trim()) task.reflection = note.trim();
+    save();
+    render();
+    return;
   }
+  task.done = true;
+  task.doneAt = new Date().toISOString();
+  // One line about what you learned turns a checkbox into thinking.
+  const note = prompt("Done! One sentence: what did you learn or notice? (optional, English practice)");
+  if (note && note.trim()) task.reflection = note.trim();
   save();
   render();
+  celebrate(taskId, POINTS[task.difficulty]);
 }
 
 // ---------- backup ----------
@@ -241,13 +303,18 @@ async function importData(file) {
 
 // ---------- wiring ----------
 
+const iconSelect = document.getElementById("goal-icon");
+iconSelect.append(...Object.entries(ICONS).map(([icon, info]) =>
+  el("option", { value: icon, selected: icon === DEFAULT_ICON }, `${icon} ${info.name}`)
+));
+
 document.getElementById("goal-form").addEventListener("submit", e => {
   e.preventDefault();
   const input = document.getElementById("goal-title");
   const title = input.value.trim();
   if (!title) return;
   input.value = "";
-  addGoal(title);
+  addGoal(title, iconSelect.value);
 });
 
 document.getElementById("export").addEventListener("click", exportData);

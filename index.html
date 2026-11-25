@@ -2,35 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Life Game</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <meta name="theme-color" content="#12151c">
+  <meta name="theme-color" content="#24392c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Life Game">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-  <header>
-    <h1>Life Game</h1>
-    <div id="stats"></div>
+  <header class="hero">
+    <svg class="mountains" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true">
+      <path class="far" d="M0 70 L40 45 L75 62 L120 25 L160 55 L200 35 L245 60 L290 20 L335 50 L370 38 L400 52 L400 100 L0 100 Z"/>
+      <path class="near" d="M0 85 L50 60 L95 80 L140 52 L190 78 L235 58 L280 82 L330 55 L375 75 L400 66 L400 100 L0 100 Z"/>
+    </svg>
+    <div class="hero-inner">
+      <h1>Life Game</h1>
+      <p class="tagline">One task at a time, all the way to the summit.</p>
+      <div id="stats" class="stats"></div>
+    </div>
   </header>
 
   <main>
-    <form id="goal-form">
+    <form id="goal-form" class="goal-form">
+      <select id="goal-icon" aria-label="Goal icon"></select>
       <input id="goal-title" type="text" placeholder="New goal, e.g. Reach C1 English" required>
       <button type="submit">Add goal</button>
     </form>
 
     <div id="goals"></div>
 
-    <details>
+    <details class="backup">
       <summary>Backup</summary>
-      <p>Your data is saved only in this browser. Export a file to keep a copy or move it to another device.</p>
-      <button id="export">Export</button>
+      <p>Your data is saved only on this device. Export a file to keep a copy or move it to another device.</p>
+      <button id="export" type="button">Export</button>
       <label class="file">Import <input id="import" type="file" accept="application/json"></label>
     </details>
   </main>
